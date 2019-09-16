@@ -10,14 +10,14 @@ variables:
   # ========================================================================
   #                          Mandatory variables 
   # ========================================================================
-  Azure.ServiceConnectionId: 'NebbiaPartner'
-  ACR.ContainerRegistryServiceConnnection: 'NebbiaRegistry'
-  AKS.ServiceConnectionId: 'todo'
+  Azure.ServiceConnectionId: 'nebbia-partner-network'
+  ACR.ContainerRegistryServiceConnnection: 'nebbia-container-registry'
+  AKS.ServiceConnectionId: 'nebbia-partner-network'
   ACR.Name: nebbiaregistry
   Chart.Name: codecampster
-  Service.Name: api
-  Image.Name: codecampster/all
-  Service.Dockerfile: src/Services/API/KetoPal.Api/Dockerfile
+  Service.Name: mvc
+  Image.Name: codecampster/mvc
+  Service.Dockerfile: src/Codecamp/Dockerfile
   Release.Name: codecampster
   # ========================================================================
   #                           Optional variables 
@@ -42,7 +42,7 @@ stages:
       inputs:
         command: buildAndPush
         containerRegistry: $(ACR.ContainerRegistryServiceConnnection)
-        repository: ketopal/$(Service.Name)
+        repository: codecampster/$(Service.Name)
         buildContext: .
         Dockerfile: $(Service.Dockerfile)
         tags: $(Build.BuildNumber)
@@ -69,22 +69,22 @@ stages:
         destination: $(Build.ArtifactStagingDirectory)
         updateDependency: true
 
-    # - task: AzureCLI@1
-    #   displayName: 'Push helm chart'
-    #   inputs:
-    #     azureSubscription: $(Azure.ServiceConnectionId)
-    #     scriptLocation: inlineScript
-    #     inlineScript: 'az acr helm push -n $(ACR.RepositoryName) $(Build.ArtifactStagingDirectory)/$(Chart.Name)-$(Build.BuildId).tgz'
-    #     conditions: and(succeeded(), eq(variables['Build.SourceBranch'],'refs/heads/master'))
+    - task: AzureCLI@1
+      displayName: 'Push helm chart'
+      inputs:
+        azureSubscription: $(Azure.ServiceConnectionId)
+        scriptLocation: inlineScript
+        inlineScript: 'az acr helm push -n $(ACR.RepositoryName) $(Build.ArtifactStagingDirectory)/$(Chart.Name)-$(Build.BuildId).tgz'
+        conditions: and(succeeded(), eq(variables['Build.SourceBranch'],'refs/heads/master'))
         
-    # - task: CopyFiles@2
-    #   displayName: "Copy Helm Charts"
-    #   inputs: 
-    #     SourceFolder: './k8s/charts'
-    #     Contents: '**'
-    #     TargetFolder: '$(Build.ArtifactsStagingDirectory)'
-    # - task: PublishBuildArtifacts@1
-    #   displayName: "Publish Build Artifacts"
-    #   inputs: 
-    #     ArtifactName: 'helm'
-    #     PathtoPublish: '$(Build.ArtifactsStagingDirectory)'
+    - task: CopyFiles@2
+      displayName: "Copy Helm Charts"
+      inputs: 
+        SourceFolder: './k8s/charts'
+        Contents: '**'
+        TargetFolder: '$(Build.ArtifactsStagingDirectory)'
+    - task: PublishBuildArtifacts@1
+      displayName: "Publish Build Artifacts"
+      inputs: 
+        ArtifactName: 'helm'
+        PathtoPublish: '$(Build.ArtifactsStagingDirectory)'
