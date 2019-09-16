@@ -33,7 +33,7 @@ stages:
   displayName: Build
   jobs:  
   - job: Build
-    displayName: Build and Publish
+    displayName: Build
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -46,45 +46,3 @@ stages:
         buildContext: .
         Dockerfile: $(Service.Dockerfile)
         tags: $(Build.BuildNumber)
-
-    - task: HelmInstaller@1
-      displayName: Helm installer
-      inputs: 
-        helmVersionToInstall: latest
-
-    - task: HelmDeploy@0
-      displayName: 'Init Helm Client'
-      inputs:
-        connectionType: None
-        command: init
-        arguments: '--client-only'
-
-    - task: HelmDeploy@0
-      displayName: 'Package Helm Charts'
-      inputs:
-        connectionType: None
-        command: package
-        chartPath: 'k8s/charts/$(Chart.Name)'
-        chartVersion: '$(Build.BuildId)'
-        destination: $(Build.ArtifactStagingDirectory)
-        updateDependency: true
-
-    - task: AzureCLI@1
-      displayName: 'Push helm chart'
-      inputs:
-        azureSubscription: $(Azure.ServiceConnectionId)
-        scriptLocation: inlineScript
-        inlineScript: 'az acr helm push -n $(ACR.RepositoryName) $(Build.ArtifactStagingDirectory)/$(Chart.Name)-$(Build.BuildId).tgz'
-      conditions: and(succeeded(), eq(variables['Build.SourceBranch'],'refs/heads/master'))
-        
-    - task: CopyFiles@2
-      displayName: "Copy Helm Charts"
-      inputs: 
-        SourceFolder: './k8s/charts'
-        Contents: '**'
-        TargetFolder: '$(Build.ArtifactsStagingDirectory)'
-    - task: PublishBuildArtifacts@1
-      displayName: "Publish Build Artifacts"
-      inputs: 
-        ArtifactName: 'helm'
-        PathtoPublish: '$(Build.ArtifactsStagingDirectory)'
