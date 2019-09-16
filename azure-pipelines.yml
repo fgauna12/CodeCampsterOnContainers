@@ -75,7 +75,7 @@ stages:
         azureSubscription: $(Azure.ServiceConnectionId)
         scriptLocation: inlineScript
         inlineScript: 'az acr helm push -n $(ACR.RepositoryName) $(Build.ArtifactStagingDirectory)/$(Chart.Name)-$(Build.BuildId).tgz'
-        conditions: and(succeeded(), eq(variables['Build.SourceBranch'],'refs/heads/master'))
+      conditions: and(succeeded(), eq(variables['Build.SourceBranch'],'refs/heads/master'))
         
     - task: CopyFiles@2
       displayName: "Copy Helm Charts"
